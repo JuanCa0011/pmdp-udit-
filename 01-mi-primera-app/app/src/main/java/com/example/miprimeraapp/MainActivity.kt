@@ -1,3 +1,6 @@
+import androidx.compose.runtime.Composable
+
+
 package com.example.miprimeraapp
 
 import android.os.Bundle
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.miprimeraapp.ui.theme.MiPrimeraAppTheme
 
+/*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +25,7 @@ class MainActivity : ComponentActivity() {
             MiPrimeraAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "Android",
+                        name = "Juan",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -44,4 +48,30 @@ fun GreetingPreview() {
     MiPrimeraAppTheme {
         Greeting("Android")
     }
+}1
+
+*/
+
+class MainActivity : ComponentActivity(){
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            Greeting()
+        }
+    }
+}
+
+@Composable
+
+fun Greeting(){
+    val nombre = "Juan"
+    val curso = "2do Dam"
+    val lenguaje = "Kotlin"
+
+
+    Text(
+        text = "\n \n Hola, soy Juan $nombre \nCurso: $curso"
+    )
 }
