@@ -36,14 +36,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // Aplicamos el tema de colores del proyecto a todo lo de dentro[cite: 6]
+            // Aplicamos el tema de colores del proyecto a todo lo de dentro
             Reto1TarjetaPresentacionTheme {
-                // Surface = el "lienzo" de fondo que ocupa toda la pantalla[cite: 6]
+                // Surface = el "lienzo" de fondo que ocupa toda la pantalla
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Aquí llamamos a NUESTRA función, la que dibuja la tarjeta[cite: 6]
+                    // Aquí llamamos a NUESTRA función, la que dibuja la tarjeta
                     TarjetaPresentacion()
                 }
             }
@@ -53,62 +53,86 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TarjetaPresentacion() {
-    // LocalContext: así un Composable "pide prestado" el contexto de Android[cite: 5]
-    // Lo necesitamos para poder abrir el navegador desde el botón.[cite: 5]
+    // LocalContext: así un Composable "pide prestado" el contexto de Android
+    // Lo necesitamos para poder abrir el navegador o aplicaciones externas desde el botón.
     val context = LocalContext.current
 
-    // 1. COLUMN: apila los elementos de arriba a abajo (como un flexbox vertical)[cite: 5]
+    // 1. COLUMN: apila los elementos de arriba a abajo (como un flexbox vertical)
     Column(
         modifier = Modifier
-            .fillMaxSize() // ocupa toda la pantalla[cite: 5]
-            .padding(all = 16.dp), // margen para que nada toque los bordes[cite: 5]
-        horizontalAlignment = Alignment.CenterHorizontally, // centra en el eje X[cite: 5]
-        verticalArrangement = Arrangement.Center // centra en el eje Y[cite: 5]
+            .fillMaxSize() // ocupa toda la pantalla
+            .padding(all = 16.dp), // margen para que nada toque los bordes
+        horizontalAlignment = Alignment.CenterHorizontally, // centra en el eje X
+        verticalArrangement = Arrangement.Center // centra en el eje Y
     ) {
-        // 2. IMAGE: la foto de perfil[cite: 5]
-        // Requiere un archivo 'foto_perfil' dentro de res/drawable[cite: 5]
+        // 2. IMAGE: la foto de perfil
+        // Requiere un archivo 'foto_perfil' dentro de res/drawable
         Image(
             painter = painterResource(id = R.drawable.foto_perfil),
-            contentDescription = "Foto de perfil de usuario", // para accesibilidad (lectores d[cite: 5]
+            contentDescription = "Foto de perfil de usuario", // para accesibilidad
             modifier = Modifier
-                .size(150.dp) // tamaño fijo: 150x150[cite: 5]
-                .clip(CircleShape), // la recorta en forma de círculo[cite: 5]
-            contentScale = ContentScale.Crop // rellena el círculo sin deformar la imagen[cite: 5]
+                .size(150.dp) // tamaño fijo: 150x150
+                .clip(CircleShape), // la recorta en forma de círculo
+            contentScale = ContentScale.Crop // rellena el círculo sin deformar la imagen
         )
 
-        // Hueco vacío entre la imagen y el texto[cite: 3, 4]
+        // Hueco vacío entre la imagen y el texto
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 3. TEXT: nombre[cite: 3, 4]
+        // 3. TEXT: nombre
         Text(
-            text = "Juan Giménez", // cada alumno pone el suyo[cite: 3, 4]
+            text = "Juan Giménez",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold
         )
 
-        // TEXT: rol o profesión[cite: 3, 4]
+        // TEXT: rol o profesión
         Text(
-            text = "Desarrollador MERN & Docente DAM", // cada alumno pone el suyo[cite: 3, 4]
+            text = "Software Engineer",
             fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.secondary // color secundario del tema[cite: 3, 4]
+            color = MaterialTheme.colorScheme.secondary // color secundario del tema
         )
 
-        // Hueco más grande antes del botón[cite: 3, 4]
+        // Hueco más grande antes de los botones
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 4. BUTTON: enlace a GitHub[cite: 2]
+        // 4. BUTTON: enlace a GitHub
         Button(
             onClick = {
-                // 1. Intent ACTION_VIEW: le decimos a Android "quiero VER este recurso"[cite: 2]
-                // y el sistema decide qué app usar (normalmente, el navegador)[cite: 2]
-                // 2. Uri.parse convierte el texto de la URL en el formato que Android entiende[cite: 2]
-                // 3. startActivity lanza esa acción[cite: 2]
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/JuanCa0011"))
                 context.startActivity(intent)
             },
-            modifier = Modifier.fillMaxWidth(fraction = 0.8f) // ocupa el 80% del ancho de pantalla[cite: 2]
+            modifier = Modifier.fillMaxWidth(fraction = 0.8f) // ocupa el 80% del ancho de pantalla
         ) {
             Text(text = "Mi Perfil de GitHub")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 5. BUTTON: enlace a LinkedIn
+        Button(
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.linkedin.com/in/juan-gim%C3%A9nez-a84844155/?isSelfProfile=true"))
+                context.startActivity(intent)
+            },
+            modifier = Modifier.fillMaxWidth(fraction = 0.8f)
+        ) {
+            Text(text = "Mi Perfil de LinkedIn")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 6. BUTTON: Enviar Correo Electrónico
+        Button(
+            onClick = {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:juan-carlos7900@hotmail.com")
+                }
+                context.startActivity(intent)
+            },
+            modifier = Modifier.fillMaxWidth(fraction = 0.8f)
+        ) {
+            Text(text = "Enviar E-mail")
         }
     }
 }
