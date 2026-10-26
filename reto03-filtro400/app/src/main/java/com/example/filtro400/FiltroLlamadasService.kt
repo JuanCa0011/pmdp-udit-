@@ -5,35 +5,41 @@ import android.telecom.CallScreeningService
 import android.util.Log
 
 /**
- * Servicio del sistema Android (CallScreeningService) que intercepta cada llamada entrante
- * en tiempo real antes de que comience a sonar en el dispositivo.
+ * Servicio de interceptación de llamadas ampliado para la Fase 3:
+ * emplea la caché optimizada en memoria de reglas y registra las decisiones
+ * con números enmascarados en un hilo de fondo tras responder a Android.
  */
 class FiltroLlamadasService : CallScreeningService() {
 
-    // Método llamado automáticamente por Android ante cualquier llamada entrante.
     override fun onScreenCall(callDetails: Call.Details) {
-        // Verifica si la llamada es entrante (DIRECTION_INCOMING).
         val esEntrante = callDetails.callDirection == Call.Details.DIRECTION_INCOMING
-        // Extrae el número de teléfono del llamante.
         val numero = callDetails.handle?.schemeSpecificPart.orEmpty()
 
-        // Obtiene los filtros activos desde la caché del repositorio SQLite.
         val repository = FiltroRepository.getInstance(applicationContext)
-        val filtrosActivos = repository.getActiveFiltersForService()
+        val rules = repository.getRulesForService()
         
-        // Determina si la llamada debe bloquearse utilizando el motor de filtrado.
-        val bloquear = esEntrante && MotorFiltrado.decidir(numero, filtrosActivos)
+        // Resolución determinista de conflictos
+        val decision = MotorFiltrado.decidirDetallado(numero, rules.first, rules.second, rules.third)
+        val bloquear = esEntrante && !decision.permitir
 
-        // Registra el resultado en Logcat para depuración.
-        Log.d("Filtro400", "Llamada de '$numero' -> ${if (bloquear) "BLOQUEADA" else "PERMITIDA"} (Filtros activos: $filtrosActivos)")
+        Log.d("Filtro400", "Llamada de '$numero' -> ${if (bloquear) "BLOQUEADA" else "PERMITIDA"} (${decision.tipoRegla}: ${decision.reglaRef})")
 
-        // Construye la respuesta para Android indicando si se debe colgar, rechazar o silenciar.
         val respuesta = CallResponse.Builder()
-            .setDisallowCall(bloquear)      // Impide que el teléfono empiece a sonar.
-            .setRejectCall(bloquear)        // Rechaza la llamada entrante.
-            .setSkipNotification(bloquear)  // Oculta la notificación de llamada perdida.
+            .setDisallowCall(bloquear)
+            .setRejectCall(bloquear)
+            .setSkipNotification(bloquear)
             .build()
 
         respondToCall(callDetails, respuesta)
+
+        // Registrar en segundo plano (privacidad: número enmascarado)
+        if (esEntrante && numero.isNotBlank()) {
+            val momento = System.currentTimeMillis()
+            val numeroEnm = MotorFiltrado.enmascararNumero(numero)
+            val estadoDecision = if (bloquear) "BLOQUEADA" else "PERMITIDA"
+            Thread {
+                repository.registrarLlamada(momento, numeroEnm, estadoDecision, decision.tipoRegla, decision.reglaRef)
+            }.start()
+        }
     }
 }

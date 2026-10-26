@@ -9,97 +9,172 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel que gestiona el estado de la UI y conecta la interfaz con el repositorio SQLite
- * utilizando corrutinas de Kotlin y flujos reactivos (StateFlow).
+ * ViewModel ampliado para la Fase 3: gestiona el estado de prefijos con prioridad,
+ * números bloqueados, lista blanca, registro de actividad, estadísticas y simulación.
  */
 class FiltroViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = FiltroRepository.getInstance(application)
 
-    // Estado interno mutable que almacena la lista de filtros.
     private val _filtros = MutableStateFlow<List<FiltroItem>>(emptyList())
-    // Estado público de solo lectura expuesto hacia la UI.
     val filtros: StateFlow<List<FiltroItem>> = _filtros.asStateFlow()
 
-    // Estado para notificar errores a la interfaz de usuario (ej. duplicados o campos vacíos).
+    private val _bloqueados = MutableStateFlow<List<NumeroBloqueadoItem>>(emptyList())
+    val bloqueados: StateFlow<List<NumeroBloqueadoItem>> = _bloqueados.asStateFlow()
+
+    private val _whitelist = MutableStateFlow<List<ListaBlancaItem>>(emptyList())
+    val whitelist: StateFlow<List<ListaBlancaItem>> = _whitelist.asStateFlow()
+
+    private val _logs = MutableStateFlow<List<RegistroItem>>(emptyList())
+    val logs: StateFlow<List<RegistroItem>> = _logs.asStateFlow()
+
+    private val _estadisticas = MutableStateFlow<Map<String, Any>>(emptyMap())
+    val estadisticas: StateFlow<Map<String, Any>> = _estadisticas.asStateFlow()
+
     private val _mensajeError = MutableStateFlow<String?>(null)
     val mensajeError: StateFlow<String?> = _mensajeError.asStateFlow()
 
     init {
-        cargarFiltros() // Carga inicial al instanciar el ViewModel.
+        cargarTodo()
+        repository.limpiarLogsAntiguos(30)
     }
 
-    /**
-     * Carga todos los filtros desde la base de datos de forma asíncrona.
-     */
-    fun cargarFiltros() {
+    fun cargarTodo() {
         viewModelScope.launch {
             _filtros.value = repository.getAllFilters()
+            _bloqueados.value = repository.getAllBlockedNumbers()
+            _whitelist.value = repository.getAllWhitelist()
+            _logs.value = repository.getAllLogs()
+            _estadisticas.value = repository.getEstadisticas()
         }
     }
 
-    /**
-     * Añade un nuevo prefijo a través del repositorio.
-     */
-    fun agregarFiltro(prefijo: String) {
+    // CRUD Prefijos (con prioridad)
+    fun agregarFiltro(prefijo: String, prioridad: Int) {
         viewModelScope.launch {
-            val result = repository.insertarFiltro(prefijo)
-            result.onSuccess {
+            repository.insertarFiltro(prefijo, prioridad).onSuccess {
                 _mensajeError.value = null
-                cargarFiltros()
+                cargarTodo()
             }.onFailure { e ->
-                _mensajeError.value = e.localizedMessage ?: "Error al añadir filtro (posible duplicado)"
+                _mensajeError.value = e.localizedMessage ?: "Error al añadir filtro"
             }
         }
     }
 
-    /**
-     * Actualiza un prefijo existente.
-     */
-    fun actualizarFiltro(id: Long, prefijo: String, activo: Boolean) {
+    fun actualizarFiltro(id: Long, prefijo: String, activo: Boolean, prioridad: Int) {
         viewModelScope.launch {
-            val result = repository.actualizarFiltro(id, prefijo, activo)
-            result.onSuccess {
+            repository.actualizarFiltro(id, prefijo, activo, prioridad).onSuccess {
                 _mensajeError.value = null
-                cargarFiltros()
+                cargarTodo()
             }.onFailure { e ->
                 _mensajeError.value = e.localizedMessage ?: "Error al actualizar filtro"
             }
         }
     }
 
-    /**
-     * Cambia el estado (activo/inactivo) de un filtro mediante su interruptor (Switch).
-     */
     fun toggleFiltro(id: Long, activo: Boolean) {
         viewModelScope.launch {
-            val result = repository.toggleFiltro(id, activo)
-            result.onSuccess {
+            repository.toggleFiltro(id, activo).onSuccess {
                 _mensajeError.value = null
-                cargarFiltros()
+                cargarTodo()
             }.onFailure { e ->
                 _mensajeError.value = e.localizedMessage ?: "Error al cambiar estado"
             }
         }
     }
 
-    /**
-     * Elimina un filtro de la base de datos.
-     */
     fun eliminarFiltro(id: Long) {
         viewModelScope.launch {
-            val result = repository.eliminarFiltro(id)
-            result.onSuccess {
+            repository.eliminarFiltro(id).onSuccess {
                 _mensajeError.value = null
-                cargarFiltros()
+                cargarTodo()
             }.onFailure { e ->
                 _mensajeError.value = e.localizedMessage ?: "Error al eliminar filtro"
             }
         }
     }
 
-    /**
-     * Limpia el mensaje de error actual en la UI.
-     */
+    // CRUD Números Bloqueados
+    fun agregarBloqueado(numero: String, alias: String?) {
+        viewModelScope.launch {
+            repository.insertarNumeroBloqueado(numero, alias).onSuccess {
+                _mensajeError.value = null
+                cargarTodo()
+            }.onFailure { e ->
+                _mensajeError.value = e.localizedMessage ?: "Error al bloquear número"
+            }
+        }
+    }
+
+    fun toggleBloqueado(id: Long, activo: Boolean) {
+        viewModelScope.launch {
+            repository.toggleNumeroBloqueado(id, activo).onSuccess {
+                _mensajeError.value = null
+                cargarTodo()
+            }.onFailure { e ->
+                _mensajeError.value = e.localizedMessage ?: "Error al cambiar estado"
+            }
+        }
+    }
+
+    fun eliminarBloqueado(id: Long) {
+        viewModelScope.launch {
+            repository.eliminarNumeroBloqueado(id).onSuccess {
+                _mensajeError.value = null
+                cargarTodo()
+            }.onFailure { e ->
+                _mensajeError.value = e.localizedMessage ?: "Error al eliminar número bloqueado"
+            }
+        }
+    }
+
+    // CRUD Lista Blanca
+    fun agregarWhitelist(numero: String, alias: String?) {
+        viewModelScope.launch {
+            repository.insertarWhitelist(numero, alias).onSuccess {
+                _mensajeError.value = null
+                cargarTodo()
+            }.onFailure { e ->
+                _mensajeError.value = e.localizedMessage ?: "Error al añadir a lista blanca"
+            }
+        }
+    }
+
+    fun eliminarWhitelist(id: Long) {
+        viewModelScope.launch {
+            repository.eliminarWhitelist(id).onSuccess {
+                _mensajeError.value = null
+                cargarTodo()
+            }.onFailure { e ->
+                _mensajeError.value = e.localizedMessage ?: "Error al eliminar de lista blanca"
+            }
+        }
+    }
+
+    // Gestión de Registro
+    fun limpiarLogs() {
+        viewModelScope.launch {
+            repository.limpiarLogs()
+            cargarTodo()
+        }
+    }
+
+    // Simulador
+    fun simularLlamada(numero: String): Decision {
+        val rules = repository.getRulesForService()
+        return MotorFiltrado.decidirDetallado(numero, rules.first, rules.second, rules.third)
+    }
+
+    // Importación y Exportación CSV
+    fun exportarCsv(): String {
+        return CsvParser.exportarCsv(_filtros.value, _bloqueados.value, _whitelist.value)
+    }
+
+    fun importarCsv(contenido: String): CsvImportResult {
+        val result = CsvParser.importarCsv(contenido, repository)
+        cargarTodo()
+        return result
+    }
+
     fun limpiarError() {
         _mensajeError.value = null
     }
