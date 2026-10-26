@@ -1,16 +1,21 @@
 package com.example.filtro400
 
+/**
+ * Resultado de la operación de importación de CSV, indicando métricas y errores.
+ */
 data class CsvImportResult(
     val importados: Int,
     val rechazados: Int,
     val errores: List<String>
 )
 
+/**
+ * Parser de dominio puro para exportar e importar configuraciones en formato CSV (`tipo;valor;alias;activo`).
+ */
 object CsvParser {
 
     /**
-     * Exporta las reglas a formato CSV: tipo;valor;alias;activo
-     * tipo = bloqueado | blanca | prefijo
+     * Exporta todas las reglas actuales a un string con formato CSV.
      */
     fun exportarCsv(
         filtros: List<FiltroItem>,
@@ -32,7 +37,7 @@ object CsvParser {
     }
 
     /**
-     * Importa un CSV tolerante con formato tipo;valor;alias;activo
+     * Importa reglas desde un contenido CSV de forma tolerante a fallos, validando cada línea.
      */
     fun importarCsv(
         contenido: String,
@@ -57,7 +62,6 @@ object CsvParser {
             val tipo = partes[0].trim().lowercase()
             val valor = partes[1].trim()
             val alias = if (partes.size > 2 && partes[2].trim().isNotEmpty()) partes[2].trim() else null
-            val activo = if (partes.size > 3) partes[3].trim() != "0" else true
 
             try {
                 when (tipo) {

@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(viewModel: FiltroViewModel = viewModel()) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Prefijos", "Bloqueados", "Lista Blanca", "Registro", "Stats", "Simulador", "CSV")
+    val tabs = listOf("Prefijos", "Bloqueados", "Lista Blanca", "Registro", "Estadísticas", "Simulador", "CSV")
 
     Column(
         modifier = Modifier
