@@ -11,19 +11,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.filtro400.ia.*
 import com.example.filtro400.ui.theme.Filtro400Theme
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,48 +50,51 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(viewModel: FiltroViewModel = viewModel()) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Prefijos", "Bloqueados", "Lista Blanca", "Registro", "Estadísticas", "Simulador", "CSV")
+    val tabs = listOf("Prefijos", "Bloqueados", "Lista Blanca", "Registro", "Estadísticas", "CSV")
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
+            .padding(16.dp)
     ) {
         // Top Bar
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("FILTRO DE LLAMADAS", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text("FILTRO DE LLAMADAS", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
             RoleStatusBadge()
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Navigation Tabs
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
-            edgePadding = 16.dp,
+            edgePadding = 0.dp,
             containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
+            contentColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clip(RoundedCornerShape(12.dp))
         ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title, fontSize = 12.sp) }
+                    text = { Text(title, fontSize = 12.sp, color = if (selectedTab == index) Color.White else Color.LightGray) }
                 )
             }
         }
 
-        // Content Area
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Content Area (Management Screens)
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(16.dp)
         ) {
             when (selectedTab) {
                 0 -> PantallaPrefijos(viewModel)
@@ -95,10 +102,14 @@ fun MainScreen(viewModel: FiltroViewModel = viewModel()) {
                 2 -> PantallaListaBlanca(viewModel)
                 3 -> PantallaRegistro(viewModel)
                 4 -> PantallaEstadisticas(viewModel)
-                5 -> PantallaSimulador(viewModel)
-                6 -> PantallaCsv(viewModel)
+                5 -> PantallaCsv(viewModel)
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Bottom AI Assistant Voice Card (Differentiated by Light/Emerald Green and constrained height)
+        AsistenteIaCard(viewModel)
     }
 }
 
@@ -119,7 +130,7 @@ fun RoleStatusBadge() {
             },
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
         ) {
-            Text("Activar Rol", fontSize = 11.sp)
+            Text("Activar Rol", fontSize = 11.sp, color = Color.White)
         }
     } else {
         Badge(containerColor = Color(0xFF38BDF8)) {
@@ -140,7 +151,7 @@ fun PantallaPrefijos(viewModel: FiltroViewModel) {
     var prioridadEditada by remember { mutableStateOf("0") }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text("Gestión de Prefijos (Prioritarios)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Gestión de Prefijos (Prioritarios)", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -186,8 +197,8 @@ fun PantallaPrefijos(viewModel: FiltroViewModel) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Prefijo: ${filtro.prefijo}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("Prioridad: ${filtro.prioridad}", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                            Text("Prefijo: ${filtro.prefijo}", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                            Text("Prioridad: ${filtro.prioridad}", fontSize = 12.sp, color = Color(0xFF38BDF8))
                         }
                         Switch(
                             checked = filtro.activo,
@@ -197,7 +208,7 @@ fun PantallaPrefijos(viewModel: FiltroViewModel) {
                             filtroAEditar = filtro
                             textoEditado = filtro.prefijo
                             prioridadEditada = filtro.prioridad.toString()
-                        }) { Text("Editar") }
+                        }) { Text("Editar", color = Color(0xFF38BDF8)) }
                         TextButton(onClick = { viewModel.eliminarFiltro(filtro.id) }) {
                             Text("Eliminar", color = MaterialTheme.colorScheme.error)
                         }
@@ -210,7 +221,7 @@ fun PantallaPrefijos(viewModel: FiltroViewModel) {
     if (filtroAEditar != null) {
         AlertDialog(
             onDismissRequest = { filtroAEditar = null },
-            title = { Text("Editar Prefijo") },
+            title = { Text("Editar Prefijo", color = Color.White) },
             text = {
                 Column {
                     OutlinedTextField(value = textoEditado, onValueChange = { textoEditado = it }, label = { Text("Prefijo") })
@@ -239,7 +250,7 @@ fun PantallaBloqueados(viewModel: FiltroViewModel) {
     var alias by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text("Números Bloqueados (Exactos)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Números Bloqueados (Exactos)", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -280,8 +291,8 @@ fun PantallaBloqueados(viewModel: FiltroViewModel) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(item.numeroNormalizado, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            if (!item.alias.isNullOrBlank()) Text("Alias: ${item.alias}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(item.numeroNormalizado, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                            if (!item.alias.isNullOrBlank()) Text("Alias: ${item.alias}", fontSize = 12.sp, color = Color.LightGray)
                         }
                         Switch(checked = item.activo, onCheckedChange = { viewModel.toggleBloqueado(item.id, it) })
                         TextButton(onClick = { viewModel.eliminarBloqueado(item.id) }) {
@@ -302,7 +313,7 @@ fun PantallaListaBlanca(viewModel: FiltroViewModel) {
     var alias by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text("Lista Blanca (Exentos de Bloqueo)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Lista Blanca (Exentos de Bloqueo)", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -343,8 +354,8 @@ fun PantallaListaBlanca(viewModel: FiltroViewModel) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(item.numeroNormalizado, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            if (!item.alias.isNullOrBlank()) Text("Alias: ${item.alias}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(item.numeroNormalizado, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                            if (!item.alias.isNullOrBlank()) Text("Alias: ${item.alias}", fontSize = 12.sp, color = Color.LightGray)
                         }
                         TextButton(onClick = { viewModel.eliminarWhitelist(item.id) }) {
                             Text("Eliminar", color = MaterialTheme.colorScheme.error)
@@ -364,7 +375,7 @@ fun PantallaRegistro(viewModel: FiltroViewModel) {
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Registro de Actividad", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Registro de Actividad", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
             OutlinedButton(onClick = { viewModel.limpiarLogs() }) {
                 Text("Vaciar Registro", color = MaterialTheme.colorScheme.error)
             }
@@ -376,16 +387,16 @@ fun PantallaRegistro(viewModel: FiltroViewModel) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(log.numeroEnmascarado, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(log.numeroEnmascarado, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.White)
                             Text(
                                 text = log.decision,
-                                color = if (log.decision == "BLOQUEADA") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                                color = if (log.decision == "BLOQUEADA") MaterialTheme.colorScheme.error else Color(0xFF38BDF8),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text("Regla: ${log.tipoRegla} (${log.reglaRef})", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Regla: ${log.tipoRegla} (${log.reglaRef})", fontSize = 12.sp, color = Color.LightGray)
                         Text(dateFormat.format(Date(log.momento)), fontSize = 11.sp, color = MaterialTheme.colorScheme.outline)
                     }
                 }
@@ -403,7 +414,7 @@ fun PantallaEstadisticas(viewModel: FiltroViewModel) {
     val porRegla = stats["porRegla"] as? Map<*, *> ?: emptyMap<Any, Any>()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text("Estadísticas de Filtrado", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Estadísticas de Filtrado", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -422,72 +433,16 @@ fun PantallaEstadisticas(viewModel: FiltroViewModel) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Bloqueos por Regla (Top)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text("Bloqueos por Regla (Top)", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color.White)
         Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             items(porRegla.entries.toList()) { entry ->
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(entry.key.toString(), fontSize = 14.sp)
-                        Text("${entry.value} bloqueos", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                        Text(entry.key.toString(), fontSize = 14.sp, color = Color.White)
+                        Text("${entry.value} bloqueos", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color(0xFF38BDF8))
                     }
-                }
-            }
-        }
-    }
-}
-
-// 6. PANTALLA SIMULADOR
-@Composable
-fun PantallaSimulador(viewModel: FiltroViewModel) {
-    var numeroPrueba by remember { mutableStateOf("") }
-    var resultado by remember { mutableStateOf<Decision?>(null) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text("Simulador de Llamadas", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Column(modifier = Modifier.padding(12.dp)) {
-                OutlinedTextField(
-                    value = numeroPrueba,
-                    onValueChange = { numeroPrueba = it },
-                    label = { Text("Número a simular") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = {
-                    if (numeroPrueba.isNotBlank()) {
-                        resultado = viewModel.simularLlamada(numeroPrueba)
-                    }
-                }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Ejecutar Simulación")
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (resultado != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (resultado!!.permitir) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.errorContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = if (resultado!!.permitir) "✅ LLAMADA PERMITIDA" else "🚫 LLAMADA BLOQUEADA",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Tipo de regla: ${resultado!!.tipoRegla}")
-                    Text("Referencia: ${resultado!!.reglaRef}")
-                    Text("Número normalizado: ${MotorFiltrado.normalizar(numeroPrueba)}")
                 }
             }
         }
@@ -529,7 +484,7 @@ fun PantallaCsv(viewModel: FiltroViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Importación y Exportación CSV", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text("Importación y Exportación CSV", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(onClick = { exportLauncher.launch("filtros_config.csv") }, modifier = Modifier.fillMaxWidth(0.8f)) {
@@ -544,7 +499,176 @@ fun PantallaCsv(viewModel: FiltroViewModel) {
 
         if (mensajeResultado.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
-            Text(mensajeResultado, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(mensajeResultado, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
+        }
+    }
+}
+
+// ASISTENTE DE VOZ CON IA (Con botón de retroceso para cambiar entre modo Voz y Chat)
+@Composable
+fun AsistenteIaCard(viewModel: FiltroViewModel) {
+    val scope = rememberCoroutineScope()
+    val voz = rememberVoz()
+    val chat = remember { mutableStateListOf<Msg>() }
+    var expandido by remember { mutableStateOf(false) }
+    var modo by remember { mutableStateOf<String?>(null) } // "voz" o "chat"
+    var entrada by remember { mutableStateOf("") }
+    var pensando by remember { mutableStateOf(false) }
+    val logs by viewModel.logs.collectAsState()
+
+    fun enviar(texto: String, esVoz: Boolean) {
+        if (texto.isBlank() || pensando) return
+        chat += Msg("user", texto)
+        pensando = true
+        scope.launch {
+            try {
+                val textoRegistro = if (logs.isEmpty()) "No hay llamadas registradas." else logs.joinToString("\n") {
+                    "${it.numeroEnmascarado} · ${it.decision} · Regla: ${it.tipoRegla}"
+                }
+                val prompt = BaseConocimiento.promptDueno(textoRegistro)
+                val r = GroqClient.responder(chat.toList(), prompt)
+                chat += Msg("assistant", r)
+                if (esVoz) {
+                    voz.hablar(r)
+                }
+            } catch (e: Exception) {
+                chat += Msg("assistant", "⚠️ Error con Groq: ${e.message?.take(100)}")
+            }
+            pensando = false
+        }
+    }
+    val escuchar = rememberEscuchar(voz) { enviar(it, true) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B)) // Verde esmeralda claro distintivo
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("🤖", fontSize = 22.sp)
+                    Column {
+                        Text("Asistente de voz con IA", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                        Text(
+                            when (modo) {
+                                "voz" -> "Modo Voz Activo 🎙️"
+                                "chat" -> "Modo Chat Activo 💬"
+                                else -> "Selecciona tu modo de asistente"
+                            },
+                            fontSize = 11.sp,
+                            color = Color(0xFFA7F3D0)
+                        )
+                    }
+                }
+                TextButton(onClick = { 
+                    expandido = !expandido
+                    if (!expandido) modo = null
+                }) {
+                    Text(if (expandido) "Ocultar 🔼" else "Abrir 🤖", color = Color(0xFF34D399), fontSize = 12.sp)
+                }
+            }
+
+            if (expandido) {
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if (modo == null) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Text("¿Cómo deseas interactuar con tu asistente?", fontSize = 13.sp, color = Color.White)
+                        
+                        Button(
+                            onClick = { modo = "voz"; voz.sonido = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                        ) {
+                            Text("🎙️ Asistente de Voz (Hablar y escuchar)", fontSize = 13.sp, color = Color.White)
+                        }
+
+                        Button(
+                            onClick = { modo = "chat"; voz.sonido = false },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857))
+                        ) {
+                            Text("💬 Asistente de Chat (Escribir)", fontSize = 13.sp, color = Color.White)
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = { modo = null; voz.callar() }) {
+                            Text("🔙 Volver a selección", color = Color(0xFF34D399), fontSize = 12.sp)
+                        }
+                        Text(
+                            if (modo == "voz") "🎙️ Modo Voz" else "💬 Modo Chat",
+                            fontSize = 12.sp,
+                            color = Color.LightGray
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    if (chat.isEmpty()) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { enviar("¿Qué llamadas he recibido?", modo == "voz") },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                            ) {
+                                Text("📋 Resumen", fontSize = 11.sp, color = Color.White)
+                            }
+                            Button(
+                                onClick = { enviar("Hola, ¿cómo estás?", modo == "voz") },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857))
+                            ) {
+                                Text("👋 Saludar", fontSize = 11.sp, color = Color.White)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .heightIn(max = 150.dp)
+                            .fillMaxWidth()
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(chat) { BurbujaMsg(it) }
+                            if (pensando) item { Text("🤖 Analizando llamadas...", fontSize = 12.sp, color = Color(0xFFA7F3D0)) }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (modo == "voz") {
+                        Button(
+                            onClick = escuchar,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = if (voz.escuchando) MaterialTheme.colorScheme.error else Color(0xFF059669))
+                        ) {
+                            Text(if (voz.escuchando) "🎙️ Escuchando... (Habla ahora)" else "🎙️ Toca para hablar con el asistente", fontSize = 13.sp, color = Color.White)
+                        }
+                    } else {
+                        BarraEntrada(
+                            texto = entrada,
+                            onTexto = { entrada = it },
+                            onEnviar = { enviar(entrada, false); entrada = "" },
+                            onMic = { /* no op */ },
+                            escuchando = false,
+                            placeholder = "Escribe un mensaje..."
+                        )
+                    }
+                }
+            }
         }
     }
 }
